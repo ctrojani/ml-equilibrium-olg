@@ -1,6 +1,3 @@
-# ml-equilibrium-olg
-Master’s thesis project on general equilibrium asset pricing with heterogeneous agents.  Focus on Blanchard–Yaari OLG models, wealth-to-consumption ratios, and neural-network-based solution methods.
-
 # Master Thesis – General Equilibrium with Heterogeneous Agents
 
 This repository contains the code and notes for my Master’s thesis in Quantitative Finance 
