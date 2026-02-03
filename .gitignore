@@ -205,3 +205,25 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ==========================
+# Research outputs (local)
+# ==========================
+
+data/raw/
+data/processed/
+data/tmp/
+
+experiments/runs/
+experiments/results/
+
+models/checkpoints/
+models/trained/
+
+# Large binary artifacts
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.npz
+*.npy
