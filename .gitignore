@@ -227,3 +227,21 @@ models/trained/
 *.h5
 *.npz
 *.npy
+
+# macOS
+.DS_Store
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+data/**/.*  # ignore hidden files inside data (optional)
+
+
