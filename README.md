@@ -24,3 +24,13 @@ Neural networks are used **as numerical solution tools**, not as black-box predi
 ## Status
 
 Work in progress (Master’s thesis).
+
+## Running
+Activate venv:
+source .venv/bin/activate
+
+Run from repo root (recommended):
+python -m scripts.run_log_benchmark
+
+Or via Makefile:
+make log-bench
