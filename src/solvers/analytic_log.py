@@ -6,20 +6,22 @@ Later: compare ML outputs to this benchmark.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass
 from typing import Dict, Any
+
+from src.model.log_analytic import solve_log
 
 
 def solve_log_benchmark(params: Any) -> Dict[str, float]:
     """
-    Placeholder analytic solution for log benchmark.
-    Replace the body with formulas from Ehling / professor notes.
+    Analytic solution for log benchmark.
+
+    Returns a dict with keys:
+    - r, phi, pi, p_over_y
     """
-    # TODO: implement closed-form for r, phi, (maybe) risky share / p_over_y.
-    out = {
-        "r": float("nan"),
-        "phi": float("nan"),
-        "pi": float("nan"),
-        "p_over_y": float("nan"),
+    sol = solve_log(params)
+    return {
+        "r": float(sol.r),
+        "phi": float(sol.phi),
+        "pi": float(sol.pi),
+        "p_over_y": float(sol.p_over_y),
     }
-    return out
