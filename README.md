@@ -1,36 +1,13 @@
-# Master Thesis – General Equilibrium with Heterogeneous Agents
+# ML Equilibrium OLG
 
-This repository contains the code and notes for my Master’s thesis in Quantitative Finance 
-(University of Zurich / ETH Zurich).
+Master's thesis: PINN methods for general-equilibrium asset pricing
+with heterogeneous agents (Blanchard–Yaari OLG).
 
-## Project Overview
-
-The thesis studies general equilibrium asset pricing in overlapping-generations economies 
-with heterogeneous agents, building on the framework of Ehling et al. (2018).
-
-The main objective is to:
-- re-derive analytically tractable benchmark cases (log utility),
-- validate neural-network-based numerical solvers against closed-form solutions,
-- extend the framework to richer preference structures (e.g. CRRA utility) where analytical solutions are no longer available.
-
-Neural networks are used **as numerical solution tools**, not as black-box predictors.
-
-## Structure (work in progress)
-
-- `src/` – core model and equilibrium definitions  
-- `solvers/` – neural-network solvers for equilibrium objects  
-- `experiments/` – numerical experiments and diagnostics  
-
-## Status
-
-Work in progress (Master’s thesis).
-
-## Running
-Activate venv:
-source .venv/bin/activate
-
-Run from repo root (recommended):
-python -m scripts.run_log_benchmark
-
-Or via Makefile:
-make log-bench
+## Notebooks
+- `hjb_2d_hardBC_LOG.ipynb` — Homogeneous log-utility benchmark (2D HJB)
+- `hjb_2d_hardBC_CRRA.ipynb` — Homogeneous CRRA(γ=2) benchmark (2D HJB)
+- `hjb_1d_hardBC_het_structuralBaseline.ipynb` — Heterogeneous two-agent solver (production)
+- `hjb_1d_hardBC_het_picardBaseline.ipynb` — Heterogeneous solver with Picard-iterated asset baseline
+- `hjb_1d_hardBC_het_spectral.ipynb` — Heterogeneous solver with Chebyshev spectral parameterization
+- `bvp_reference_heterogeneous.ipynb` — Independent BVP reference solver
+- `*_minimal.ipynb`, `*_tier12.ipynb` — Ablation experiments
