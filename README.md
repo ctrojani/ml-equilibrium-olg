@@ -1,5 +1,3 @@
-cd /tmp/ml-equilibrium-olg
-cat > README.md << 'EOF'
 # ML Equilibrium OLG
 
 Master's thesis (UZH/ETH, 2025–2026): physics-informed neural network
