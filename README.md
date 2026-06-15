@@ -1,132 +1,158 @@
 # ML Equilibrium OLG
 
-**Physics-informed neural network methods for general-equilibrium asset pricing in heterogeneous-agent Blanchard–Yaari OLG economies.**
+**Physics-Informed Neural Networks for General-Equilibrium Asset Pricing in Heterogeneous-Agent Overlapping-Generations Economies**
 
-Master's thesis — *Cecilia Trojani, UZH / ETH Zurich, 2025–2026.*
+Master's Thesis — *Cecilia Trojani*  
+Master in Quantitative Finance, University of Zurich & ETH Zurich (2025–2026)  
+Supervisor: Prof. Yucheng Yang
 
 ---
 
 ## Overview
 
-This repository contains the numerical implementation accompanying the
-thesis. The methodology applies physics-informed neural networks (PINNs)
-to three asset-pricing equilibrium problems of increasing complexity:
+This repository contains the code accompanying my Master's thesis on
+physics-informed neural network (PINN) methods for solving continuous-time
+general-equilibrium asset-pricing models with heterogeneous agents in
+Blanchard–Yaari overlapping-generations (OLG) economies.
 
-1. **Homogeneous log-utility benchmark** ($\gamma = 1$) — closed-form
-   reference.
-2. **Homogeneous CRRA benchmark** ($\gamma = 2$) — closed-form
-   reference.
-3. **Heterogeneous two-agent economy** ($\gamma^1 = 1$, $\gamma^2 = 2$) —
-   production result; no closed-form solution exists.
+The thesis combines asset-pricing theory, heterogeneous-agent
+equilibrium analysis, and scientific machine learning. The objective is
+to develop neural-network-based solvers capable of computing equilibrium
+asset prices, portfolio allocations, and valuation ratios in economic
+environments where analytical solutions are unavailable.
 
-The homogeneous cases are solved through their HJB dynamic-programming
-formulation; the heterogeneous case is solved directly from the
-stationary martingale ODE system derived in the thesis, using a
-structural-baseline architecture with multiplicative neural correction.
-
----
-
-## Methodology highlights
-
-- **Hard boundary conditions through architectural ansatz.** Trial
-  solutions are constructed so that all relevant boundary conditions
-  hold exactly for any network output, eliminating boundary-penalty
-  terms.
-  - *Homogeneous (HJB).* Log-of-affine ansatz (log utility) and
-    power-of-affine ansatz (CRRA), each enforcing the
-    Merton-with-mortality boundary at $y = 0$ by construction.
-  - *Heterogeneous (ODE).* Multiplicative correction
-    $\widehat\phi^i(f) = \phi^i_{\mathrm{base}}(f) \cdot \exp\bigl(f(1-f)\,N^i(f)\bigr)$,
-    with a common $f(1-f)$ envelope that anchors each valuation ratio at
-    both endpoints — the same-type homogeneous equilibrium at one end and
-    the alien-type representative-agent W2C ratio at the other.
-
-- **Minimal shape penalty.** Loss enforces only monotonicity
-  $V_w > 0$ and $V_y > 0$ — no concavity, cross-derivative or higher-order
-  constraints. Numerical guards on $V_w$ and $V_{ww}$ inside the FOC
-  formulas are formula-level safeguards (analogous to
-  `c.clamp(min=1e-8)` inside `log c`), not penalty terms in the loss.
-
-- **Two-stage training.** Adam optimisation in FP32 for warm-up, then
-  strong-Wolfe L-BFGS in FP64 for polishing on a residual-weighted
-  frozen collocation grid.
-
-- **Endogenous β closure (heterogeneous solver).** The newborn-consumption
-  share is reconstructed from the learned valuation ratios at every
-  collocation point and re-enters the ODE coefficients, turning the
-  equilibrium into an implicit fixed-point problem resolved through
-  residual minimisation.
-
-- **Validation through homogeneous-limit tests.** The heterogeneous
-  solver is run at $\gamma^1 = \gamma^2 = 1$ and $\gamma^1 = \gamma^2 = 2$
-  and must recover the corresponding closed-form constants throughout
-  the interior — the architecture is forced to do so exactly when
-  $\gamma^1 = \gamma^2$.
+The framework builds on the heterogeneous-agent OLG model of
+Ehling, Graniero, and Heyerdahl-Larsen (2018) and focuses on
+heterogeneity in risk aversion as the primary application.
 
 ---
 
-## Notebooks
+## Economic Motivation
 
-### Production solvers
-| Notebook | Problem |
-|---|---|
-| `hjb_2d_hardBC_LOG_minimal.ipynb` | Homogeneous log-utility HJB-PINN ($\gamma = 1$). |
-| `hjb_2d_hardBC_CRRA_minimal.ipynb` | Homogeneous CRRA HJB-PINN ($\gamma = 2$). |
-| `hjb_1d_hardBC_het_structuralBaseline.ipynb` | Heterogeneous two-agent stationary ODE solver. Includes the Garleanu–Panageas (2015) calibration reproduction ($\gamma^1 = 1.5$, $\gamma^2 = 10$) and the interest-rate decomposition figures. |
+Continuous-time asset-pricing models are often analytically tractable
+when all investors share identical preferences. In such homogeneous
+economies, equilibrium quantities can frequently be expressed in
+closed form using Merton-type arguments.
 
-### Methodology ablations
-| Notebook | Purpose |
-|---|---|
-| `hjb_2d_hardBC_LOG_minimal_noclamps.ipynb` | Log-utility solver with the FOC-stability clamps removed. Empirical test of whether the $V_w$ and $V_{ww}$ clamps are correctness requirements or optimisation accelerators. |
-| `hjb_2d_hardBC_CRRA_minimal_noclamps.ipynb` | Same ablation for CRRA($\gamma = 2$). |
+Introducing preference heterogeneity fundamentally changes the problem.
+When agents differ in risk aversion, equilibrium prices depend not only
+on aggregate risk but also on how risk is distributed across investors.
+The resulting equilibrium is characterized by a system of nonlinear
+differential equations whose solution determines risk premia, interest
+rates, wealth distributions, and asset valuations.
 
-The ablation runs converge to a stable but biased equilibrium with a
-$\sim 3\%$ portfolio overshoot, providing empirical evidence that the
-clamps act as economically-motivated FOC safeguards rather than mere
-numerical heuristics.
+These mechanisms play a central role in modern heterogeneous-agent
+asset-pricing models. In particular, the influential framework of
+Gârleanu and Panageas (2015) shows how differences in risk tolerance
+can generate state-dependent risk premia and excess return volatility.
 
----
-
-## Running
-
-```bash
-git clone https://github.com/ctrojani/ml-equilibrium-olg.git
-cd ml-equilibrium-olg
-pip install -r requirements.txt
-jupyter notebook
-```
-
-Tested on Python 3.10+ with PyTorch 2.x. Random seeds are fixed (42)
-throughout; training is deterministic on CPU. On CUDA, small
-reduction-order non-determinism may appear at the $\sim 10^{-9}$ level
-without affecting the qualitative results.
-
-Each notebook is self-contained: its title cell summarises the
-architecture, training pipeline, loss components, and validation
-strategy used in that specific run. All hyperparameters
-($N_{\mathrm{epochs}}$, learning rates, collocation grid sizes,
-L-BFGS settings, etc.) are documented in the configuration cell at the
-top of the training phase.
+Solving such equilibria accurately therefore becomes a prerequisite for
+quantitative analysis.
 
 ---
 
-## Citation
+## Main Contributions
 
-If you use this work, please cite:
+The repository implements three methodological contributions developed
+in the thesis.
+
+### 1. Hard-Boundary PINN Architecture
+
+The trial solutions incorporate analytical equilibrium limits directly
+into the network architecture. Known boundary conditions are satisfied
+exactly rather than approximately through penalty terms.
+
+As a result, the neural network is responsible only for learning the
+unknown heterogeneous interior of the equilibrium.
+
+### 2. Economically Structured PINN Formulation
+
+Economic restrictions are embedded directly into the learning problem.
+Preference monotonicity is enforced explicitly, while numerical
+stabilization terms are introduced only when they admit a clear
+economic interpretation.
+
+This separates economically meaningful structure from purely numerical
+regularization.
+
+### 3. Heterogeneous-Equilibrium Solver
+
+A stationary ODE formulation is developed for the heterogeneous OLG
+economy. The solver incorporates an endogenous newborn-consumption-share
+closure and computes equilibrium valuation ratios, risk premia, and
+interest rates directly from the equilibrium conditions.
+
+The methodology is validated through homogeneous-limit consistency
+checks built into the architecture itself.
+
+---
+
+## Repository Structure
+
+The methodology is developed and validated through three notebooks of
+increasing complexity.
+
+| Notebook | Description |
+|-----------|-------------|
+| `hjb_2d_hardBC_LOG_minimal.ipynb` | Homogeneous log-utility benchmark ($begin:math:text$\\gamma \= 1$end:math:text$). Two-dimensional HJB formulation with analytical closed-form solution. |
+| `hjb_2d_hardBC_CRRA_minimal.ipynb` | Homogeneous CRRA benchmark ($begin:math:text$\\gamma \= 2$end:math:text$). Two-dimensional HJB formulation with analytical closed-form solution. |
+| `hjb_1d_hardBC_heterogeneous.ipynb` | Heterogeneous two-agent economy ($begin:math:text$\\gamma\^1\,\\gamma\^2$end:math:text$). Stationary equilibrium ODE formulation with structural baselines and multiplicative neural corrections. Includes the Gârleanu–Panageas (2015) calibration and interest-rate decomposition analysis. |
+
+The homogeneous notebooks serve as controlled benchmark environments in
+which the neural solutions can be compared directly against analytical
+equilibria.
+
+The heterogeneous notebook contains the full production solver and
+implements its own internal validation strategy. Running the
+heterogeneous architecture under homogeneous-limit parameterizations,
+
+$begin:math:display$
+\\gamma\^1\=\\gamma\^2\=1
+\\qquad\\text\{and\}\\qquad
+\\gamma\^1\=\\gamma\^2\=2\,
+$end:math:display$
+
+must recover the corresponding homogeneous equilibria throughout the
+entire state space. These tests provide a stringent consistency check
+before applying the solver to genuinely heterogeneous economies.
+
+---
+
+## Numerical Methodology
+
+Key numerical features include:
+
+- **Hard-boundary trial solutions** that satisfy analytical boundary
+  conditions exactly.
+
+- **Structural analytical baselines** that anchor the heterogeneous
+  solution to economically meaningful reference equilibria.
+
+- **Endogenous equilibrium closure**, where the newborn-consumption
+  share is reconstructed from the learned valuation ratios at each
+  collocation point.
+
+- **Physics-informed training**, in which the neural networks minimize
+  equilibrium residuals rather than fitting data.
+
+- **Two-stage optimization**, combining Adam warm-up iterations with
+  strong-Wolfe L-BFGS refinement in double precision.
+
+Each notebook is self-contained and documents the architecture,
+equilibrium equations, loss functions, training procedure, and
+validation methodology used in that experiment.
+
+---
+
+## Reference
+
+If you use this repository, please cite:
 
 ```bibtex
 @mastersthesis{trojani2026olg,
   author  = {Trojani, Cecilia},
-  title   = {Physics-Informed Neural Networks for General-Equilibrium
-             Asset Pricing in Heterogeneous-Agent OLG Economies},
+  title   = {Deep Learning for Solving Heterogeneous-Agent Overlapping-Generations Asset Pricing Models},
   school  = {University of Zurich and ETH Zurich},
   year    = {2026}
 }
 ```
-
----
-
-## License
-
-Released for academic use accompanying the thesis. See `LICENSE` for
-details.
